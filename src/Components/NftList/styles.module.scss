@@ -1,0 +1,13 @@
+.nft-list {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(5, 1fr);
+  max-width: 1500px;
+  margin: 0 auto;
+
+  @for $i from 4 through 1 {
+    @media (max-width: (250px * ($i + 1))) {
+      grid-template-columns: repeat($i, 1fr);
+    }
+  }
+}
