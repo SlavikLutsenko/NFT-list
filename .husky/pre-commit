@@ -1,0 +1,22 @@
+#!/bin/bash
+
+case "${1}" in
+    --about )
+        echo "eslint"
+        ;;
+    * )
+        files=$(git status --porcelain | grep "[MA]\s.*/.*\.js" | awk ' {print $2} ')
+        if [ ! -z "${files[0]}" -a "${files[0]}" != " " ] ; then
+            node_modules/eslint/bin/eslint.js \
+                -c .eslintrc.js \
+                --ignore-path .eslintignore \
+                --resolve-plugins-relative-to node_modules \
+                $(git status --porcelain | grep "[MA]\s.*/.*\.js" | awk ' {print $2} ')
+            if [ $? -ne 0 ] ; then
+                echo "Error: eslint failed";
+                echo "Aborted"
+                exit 1
+            fi
+        fi
+        ;;
+esac
