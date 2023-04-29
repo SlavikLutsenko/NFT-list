@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import InfiniteScroll from 'react-infinite-scroller';
+import cn from 'classnames';
+
+import { Spinner } from '@/Components/Spinner';
 
 import { Nft } from '@/services/nft';
 
@@ -12,8 +16,8 @@ export function NftList() {
 
   useEffect(
     () => {
-      Nft.getNftList()
-        .then(setNftList)
+      // TODO: fix load many times
+      loadNftListPage()
         .finally(() => {
           setIsLoading(false);
         });
@@ -23,14 +27,24 @@ export function NftList() {
 
   if (isLoading) {
     return (
-      <div>
-        loading ...
+      <div className="flex justify-center py-52">
+        <Spinner />
       </div>
     );
   }
 
   return (
-    <div className={styles['nft-list']}>
+    <InfiniteScroll
+      pageStart={0}
+      loadMore={loadNftListPage}
+      hasMore={!isLoading}
+      loader={(
+        <div key={0} className={cn(styles['infinite-scroll-loader'], 'flex justify-center py-5')}>
+          <Spinner />
+        </div>
+      )}
+      className={styles['nft-list']}
+    >
       {
         nftList.map(nftItem => (
           <NftItem
@@ -42,6 +56,12 @@ export function NftList() {
           />
         ))
       }
-    </div>
+    </InfiniteScroll>
   );
+
+  async function loadNftListPage(page = 1) {
+    const newNftItem = await Nft.getNftList(page, 20);
+
+    setNftList(currentNftItems => currentNftItems.concat(newNftItem));
+  }
 }
