@@ -13,6 +13,7 @@ export function Spinner({ className, ...props }) {
       priority
       className={cn(styles.spinner, className)}
       src={spinnerIconUrl}
+      alt="Spinner"
 
       {...props}
     />

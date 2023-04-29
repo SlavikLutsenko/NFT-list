@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroller';
+import axios from 'axios';
 import cn from 'classnames';
 
 import { Spinner } from '@/Components/Spinner';
@@ -16,11 +17,24 @@ export function NftList() {
 
   useEffect(
     () => {
-      // TODO: fix load many times
-      loadNftListPage()
+      const controller = new AbortController();
+
+      loadNftListPage(
+        1,
+        {
+          signal: controller.signal,
+        }
+      )
+        .catch(error => {
+          if (!axios.isCancel(error)) {
+            return Promise.reject(error);
+          }
+        })
         .finally(() => {
           setIsLoading(false);
         });
+
+      return () => controller.abort();
     },
     []
   );
@@ -35,8 +49,9 @@ export function NftList() {
 
   return (
     <InfiniteScroll
-      pageStart={0}
+      pageStart={1}
       loadMore={loadNftListPage}
+      initialLoad={false}
       hasMore={!isLoading}
       loader={(
         <div key={0} className={cn(styles['infinite-scroll-loader'], 'flex justify-center py-5')}>
@@ -59,8 +74,8 @@ export function NftList() {
     </InfiniteScroll>
   );
 
-  async function loadNftListPage(page = 1) {
-    const newNftItem = await Nft.getNftList(page, 20);
+  async function loadNftListPage(page = 1, config = {}) {
+    const newNftItem = await Nft.getNftList(page, 20, config);
 
     setNftList(currentNftItems => currentNftItems.concat(newNftItem));
   }
