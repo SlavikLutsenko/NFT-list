@@ -18,11 +18,14 @@ export function NftItem({
         className
       )}
     >
-      { /* eslint-disable-next-line @next/next/no-img-element */ }
-      <img
-        src={img}
-        alt={title}
-      />
+      <div className={styles['nft-image-wrapper']}>
+        { /* eslint-disable-next-line @next/next/no-img-element */ }
+        <img
+          className={styles['nft-image']}
+          src={img}
+          alt={title}
+        />
+      </div>
       <p className="px-3 py-2 flex justify-between items-center">
         <span className="text-sm font-light text-gray-600">
           {title}
