@@ -1,12 +1,24 @@
-.nft-list {
-  $max-column-count: 5;
-  $max-nft-item-width: 250px;
+$max-nft-list-width: 1500px;
+$max-nft-item-width: 250px;
+$max-column-count: 5;
 
+:export {
+  maxNftListWidth: $max-nft-list-width;
+  maxNftItemWidth: $max-nft-item-width;
+  maxColumnCount: $max-column-count;
+}
+
+.nft-list-wrapper {
+  max-width: 1500px;
+  margin: 0 auto;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.nft-list {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat($max-column-count, 1fr);
-  max-width: 1500px;
-  margin: 0 auto;
 
   .infinite-scroll-loader {
     grid-column-start: 1;

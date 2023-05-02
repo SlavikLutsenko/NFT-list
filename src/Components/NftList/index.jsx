@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
-import InfiniteScroll from 'react-infinite-scroller';
-import axios from 'axios';
-import cn from 'classnames';
+import { useEffect, useRef, useState } from 'react';
+import { AutoSizer, InfiniteLoader, List } from 'react-virtualized';
 
 import { Spinner } from '@/Components/Spinner';
 
@@ -12,71 +10,113 @@ import { NftItem } from './components/NftItem';
 import styles from './styles.module.scss';
 
 export function NftList() {
-  const [isLoading, setIsLoading] = useState(true);
   const [nftList, setNftList] = useState([]);
+  const [countNftItemInRow, setCountNftItemInRow] = useState(0);
+
+  const nftListWrapperRef = useRef();
 
   useEffect(
     () => {
-      const controller = new AbortController();
+      updateCountNftItemInRow();
 
-      loadNftListPage(
-        1,
-        {
-          signal: controller.signal,
-        }
-      )
-        .catch(error => {
-          if (!axios.isCancel(error)) {
-            return Promise.reject(error);
-          }
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      window.addEventListener('resize', updateCountNftItemInRow);
 
-      return () => controller.abort();
+      return () => window.removeEventListener('resize', updateCountNftItemInRow);
     },
     []
   );
 
-  if (isLoading) {
+  return (
+    <div
+      ref={nftListWrapperRef}
+      className={styles['nft-list-wrapper']}
+    >
+      {
+        countNftItemInRow
+          ? (
+            <AutoSizer>
+              {({ height, width }) => (
+                <InfiniteLoader
+                  isRowLoaded={isRowLoaded}
+                  loadMoreRows={loadMoreRows}
+                  rowCount={Math.ceil(nftList.length / countNftItemInRow) + 3}
+                >
+                  {({ onRowsRendered, registerChild }) => (
+                    <List
+                      height={height}
+                      onRowsRendered={onRowsRendered}
+                      ref={registerChild}
+                      rowCount={Math.ceil(nftList.length / countNftItemInRow) + 3}
+                      rowHeight={340}
+                      rowRenderer={rowRenderer}
+                      width={width}
+                      overscanRowCount={2}
+                    />
+                  )}
+                </InfiniteLoader>
+              )}
+            </AutoSizer>
+          )
+          : (
+            <div className="flex justify-center py-52">
+              <Spinner />
+            </div>
+          )
+      }
+    </div>
+  );
+
+  async function loadMoreRows({ startIndex: startRow, stopIndex: stopRow }, config = {}) {
+    const newNftItem = await Nft.getNftList(
+      startRow * countNftItemInRow,
+      (stopRow - startRow + 1) * countNftItemInRow,
+      config
+    );
+
+    setNftList(currentNftItems => currentNftItems.concat(newNftItem));
+  }
+
+  function isRowLoaded({ index }) {
+    return index < (nftList.length / countNftItemInRow);
+  }
+
+  function rowRenderer({ key, index, style }) {
     return (
-      <div className="flex justify-center py-52">
-        <Spinner />
+      <div
+        key={key}
+        style={style}
+        className={styles['nft-list']}
+      >
+        {
+          nftList
+            .slice(index * countNftItemInRow, (index + 1) * countNftItemInRow)
+            .map(nftItem => (
+              <NftItem
+                key={nftItem?.id}
+
+                className="m-2"
+
+                {...(nftItem || null)}
+              />
+            ))
+        }
       </div>
     );
   }
 
-  return (
-    <InfiniteScroll
-      pageStart={1}
-      loadMore={loadNftListPage}
-      initialLoad={false}
-      hasMore={!isLoading}
-      loader={(
-        <div key={0} className={cn(styles['infinite-scroll-loader'], 'flex justify-center py-5')}>
-          <Spinner />
-        </div>
-      )}
-      className={styles['nft-list']}
-    >
-      {
-        nftList.map(nftItem => (
-          <NftItem
-            key={nftItem.id}
+  function updateCountNftItemInRow() {
+    setCountNftItemInRow(getCurrentCountNftItemInRow());
+  }
 
-            className="m-2"
+  function getCurrentCountNftItemInRow() {
+    const clientNftListWrapperWidth = Math.min(
+      parseInt(styles.maxNftListWidth),
+      nftListWrapperRef.current.clientWidth
+    );
 
-            {...nftItem}
-          />
-        ))
-      }
-    </InfiniteScroll>
-  );
-
-  async function loadNftListPage(page = 1, config = {}) {
-    const newNftItem = await Nft.getNftList(page, 20, config);
-
-    setNftList(currentNftItems => currentNftItems.concat(newNftItem));
+    return Math.ceil(Math.min(
+      clientNftListWrapperWidth / parseInt(styles.maxNftItemWidth) - 1,
+      parseInt(styles.maxColumnCount)
+    ));
   }
 }
