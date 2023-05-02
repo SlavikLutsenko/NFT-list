@@ -1,15 +1,17 @@
 import axios from 'axios';
+import axiosRetry from 'axios-retry';
 import qs from 'qs';
 
-export class Nft {
-  static async getNftPage(page = 1, pageSize = 20, config = {}) {
-    return Nft.getNftList(
-      (page - 1) * pageSize,
-      pageSize,
-      config
-    );
+axiosRetry(
+  axios,
+  {
+    retries: 3,
+    shouldResetTimeout: true,
+    retryDelay: retryCount => retryCount * 1000,
   }
+);
 
+export class Nft {
   static async getNftList(offset, limit, config = {}) {
     return (await axios.get(
       `https://api-mainnet.magiceden.io/idxv2/getListedNftsByCollectionSymbol?${

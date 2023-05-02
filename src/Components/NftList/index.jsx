@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { AutoSizer, InfiniteLoader, List } from 'react-virtualized';
+import { AxiosError } from 'axios';
 import cn from 'classnames';
 
 import { Spinner } from '@/Components/Spinner';
@@ -103,13 +105,35 @@ export function NftList() {
   );
 
   async function loadMoreRows({ startIndex: startRow, stopIndex: stopRow }, config = {}) {
-    const newNftItem = await Nft.getNftList(
-      startRow * countNftItemInRow,
-      (stopRow - startRow + 1) * countNftItemInRow,
-      config
-    );
+    try {
+      const newNftItem = await Nft.getNftList(
+        startRow * countNftItemInRow,
+        (stopRow - startRow + 1) * countNftItemInRow,
+        config
+      );
 
-    setNftList(currentNftItems => currentNftItems.concat(newNftItem));
+      setNftList(currentNftItems => currentNftItems.concat(newNftItem));
+    }
+    catch (error) {
+      if (AxiosError.ERR_NETWORK === error.code) {
+        toast.error(
+          'The service is currently unavailable. Please wait a few moments and reload the page',
+          {
+            position: 'top-center',
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: 'colored',
+          }
+        );
+      }
+      else {
+        throw new Error(error);
+      }
+    }
   }
 
   function isRowLoaded({ index }) {
