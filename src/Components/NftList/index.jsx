@@ -12,8 +12,10 @@ import styles from './styles.module.scss';
 export function NftList() {
   const [nftList, setNftList] = useState([]);
   const [countNftItemInRow, setCountNftItemInRow] = useState(0);
+  const [nftItemHeight, setNftItemHeight] = useState(340);
 
   const nftListWrapperRef = useRef();
+  const nftListVirtualizedRef = useRef();
 
   useEffect(
     () => {
@@ -24,6 +26,17 @@ export function NftList() {
       return () => window.removeEventListener('resize', updateCountNftItemInRow);
     },
     []
+  );
+
+  useEffect(
+    () => {
+      if (nftListVirtualizedRef.current) {
+        for (let i = 0; i < nftList.length / countNftItemInRow; i++) {
+          nftListVirtualizedRef.current.recomputeRowHeights(i);
+        }
+      }
+    },
+    [nftItemHeight, countNftItemInRow]
   );
 
   return (
@@ -45,9 +58,12 @@ export function NftList() {
                     <List
                       height={height}
                       onRowsRendered={onRowsRendered}
-                      ref={registerChild}
+                      ref={list => {
+                        nftListVirtualizedRef.current = list;
+                        registerChild(list);
+                      }}
                       rowCount={Math.ceil(nftList.length / countNftItemInRow) + 3}
-                      rowHeight={340}
+                      rowHeight={() => nftItemHeight}
                       rowRenderer={rowRenderer}
                       width={width}
                       overscanRowCount={2}
@@ -105,7 +121,23 @@ export function NftList() {
   }
 
   function updateCountNftItemInRow() {
-    setCountNftItemInRow(getCurrentCountNftItemInRow());
+    const clientNftListWrapperWidth = Math.min(
+      parseInt(styles.maxNftListWidth),
+      nftListWrapperRef.current.clientWidth
+    );
+    const currentCountNftItemInRow = getCurrentCountNftItemInRow();
+
+    setCountNftItemInRow(currentCountNftItemInRow);
+    setNftItemHeight(
+      ( // calculate nft height of image
+        clientNftListWrapperWidth / currentCountNftItemInRow
+          - 2 // border
+          - 16 // margin
+      )
+        + 44 // height of text block
+        + 16 // margin
+        + 2 // border
+    );
   }
 
   function getCurrentCountNftItemInRow() {
