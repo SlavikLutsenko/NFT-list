@@ -8,11 +8,13 @@ $max-column-count: 5;
   maxColumnCount: $max-column-count;
 }
 
-.nft-list-wrapper {
+.page-wrapper {
   max-width: 1500px;
   margin: 0 auto;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .nft-list {
@@ -36,3 +38,13 @@ $max-column-count: 5;
   }
 }
 
+.search-input {
+  width: 50%;
+  max-width: 400px;
+
+  border-bottom: 1px solid #c4c4c4;
+  padding: 5px 15px;
+  text-align: center;
+  font-size: 24px;
+  outline: none;
+}

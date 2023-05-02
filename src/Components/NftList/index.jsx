@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AutoSizer, InfiniteLoader, List } from 'react-virtualized';
+import cn from 'classnames';
 
 import { Spinner } from '@/Components/Spinner';
 
@@ -13,9 +14,15 @@ export function NftList() {
   const [nftList, setNftList] = useState([]);
   const [countNftItemInRow, setCountNftItemInRow] = useState(0);
   const [nftItemHeight, setNftItemHeight] = useState(340);
+  const [search, setSearch] = useState('');
 
   const nftListWrapperRef = useRef();
   const nftListVirtualizedRef = useRef();
+
+  const filteredNftList = useMemo(
+    () => nftList.filter(({ title }) => title.toLowerCase().indexOf(search.toLowerCase()) != -1),
+    [nftList, search]
+  );
 
   useEffect(
     () => {
@@ -42,43 +49,56 @@ export function NftList() {
   return (
     <div
       ref={nftListWrapperRef}
-      className={styles['nft-list-wrapper']}
+      className={styles['page-wrapper']}
     >
-      {
-        countNftItemInRow
-          ? (
-            <AutoSizer>
-              {({ height, width }) => (
-                <InfiniteLoader
-                  isRowLoaded={isRowLoaded}
-                  loadMoreRows={loadMoreRows}
-                  rowCount={Math.ceil(nftList.length / countNftItemInRow) + 3}
-                >
-                  {({ onRowsRendered, registerChild }) => (
-                    <List
-                      height={height}
-                      onRowsRendered={onRowsRendered}
-                      ref={list => {
-                        nftListVirtualizedRef.current = list;
-                        registerChild(list);
-                      }}
-                      rowCount={Math.ceil(nftList.length / countNftItemInRow) + 3}
-                      rowHeight={() => nftItemHeight}
-                      rowRenderer={rowRenderer}
-                      width={width}
-                      overscanRowCount={2}
-                    />
-                  )}
-                </InfiniteLoader>
-              )}
-            </AutoSizer>
-          )
-          : (
-            <div className="flex justify-center py-52">
-              <Spinner />
-            </div>
-          )
-      }
+      <input
+        className={cn(styles['search-input'], 'self-center my-5')}
+        value={search}
+        onChange={({ target: { value } }) => setSearch(value)}
+        placeholder="Search ..."
+      />
+      <div className="flex-1">
+        {
+          countNftItemInRow
+            ? (
+              <AutoSizer>
+                {({ height, width }) => (
+                  <InfiniteLoader
+                    isRowLoaded={isRowLoaded}
+                    loadMoreRows={loadMoreRows}
+                    rowCount={Math.ceil(filteredNftList.length / countNftItemInRow) + (search ? 0 : 3)}
+                  >
+                    {({ onRowsRendered, registerChild }) => (
+                      <List
+                        height={height}
+                        onRowsRendered={onRowsRendered}
+                        ref={list => {
+                          nftListVirtualizedRef.current = list;
+                          registerChild(list);
+                        }}
+                        rowCount={Math.ceil(filteredNftList.length / countNftItemInRow) + (search ? 0 : 3)}
+                        rowHeight={() => nftItemHeight}
+                        rowRenderer={rowRenderer}
+                        width={width}
+                        overscanRowCount={search ? 0 : 2}
+                        noRowsRenderer={() => (
+                          <p className="mt-10 text-center text-4xl font-bold">
+                            No NFT
+                          </p>
+                        )}
+                      />
+                    )}
+                  </InfiniteLoader>
+                )}
+              </AutoSizer>
+            )
+            : (
+              <div className="flex justify-center py-52">
+                <Spinner />
+              </div>
+            )
+        }
+      </div>
     </div>
   );
 
@@ -97,10 +117,17 @@ export function NftList() {
   }
 
   function rowRenderer({ key, index, style }) {
-    const nftItemForCurrentRow = nftList.slice(index * countNftItemInRow, (index + 1) * countNftItemInRow);
-    const emptyNftItemForCurrentRow = (new Array(countNftItemInRow))
-      .fill(1)
-      .map(() => ({ id: Math.random() }));
+    let nftItemForCurrentRow = nftList
+      .filter(({ title }) => title.toLowerCase().indexOf(search.toLowerCase()) != -1)
+      .slice(index * countNftItemInRow, (index + 1) * countNftItemInRow);
+
+    if (nftItemForCurrentRow.length < countNftItemInRow && !search) {
+      nftItemForCurrentRow = nftItemForCurrentRow.concat(
+        (new Array(countNftItemInRow - nftItemForCurrentRow.length))
+          .fill(1)
+          .map(() => ({ id: Math.random() }))
+      );
+    }
 
     return (
       <div
@@ -109,11 +136,7 @@ export function NftList() {
         className={styles['nft-list']}
       >
         {
-          (
-            nftItemForCurrentRow.length
-              ? nftItemForCurrentRow
-              : emptyNftItemForCurrentRow
-          )
+          nftItemForCurrentRow
             .map(nftItem => (
               <NftItem
                 key={nftItem?.id}
