@@ -97,6 +97,11 @@ export function NftList() {
   }
 
   function rowRenderer({ key, index, style }) {
+    const nftItemForCurrentRow = nftList.slice(index * countNftItemInRow, (index + 1) * countNftItemInRow);
+    const emptyNftItemForCurrentRow = (new Array(countNftItemInRow))
+      .fill(1)
+      .map(() => ({ id: Math.random() }));
+
     return (
       <div
         key={key}
@@ -104,8 +109,11 @@ export function NftList() {
         className={styles['nft-list']}
       >
         {
-          nftList
-            .slice(index * countNftItemInRow, (index + 1) * countNftItemInRow)
+          (
+            nftItemForCurrentRow.length
+              ? nftItemForCurrentRow
+              : emptyNftItemForCurrentRow
+          )
             .map(nftItem => (
               <NftItem
                 key={nftItem?.id}
