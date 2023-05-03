@@ -13,9 +13,12 @@ import { NftItem } from './components/NftItem';
 import styles from './styles.module.scss';
 
 export function NftList() {
+  const numberOfRowsToLoad = 4;
+  const defaultNftItemHeight = 340;
+
   const [nftList, setNftList] = useState([]);
   const [countNftItemInRow, setCountNftItemInRow] = useState(0);
-  const [nftItemHeight, setNftItemHeight] = useState(340);
+  const [nftItemHeight, setNftItemHeight] = useState(defaultNftItemHeight);
   const [search, setSearch] = useState('');
 
   const nftListWrapperRef = useRef();
@@ -24,6 +27,10 @@ export function NftList() {
   const filteredNftList = useMemo(
     () => nftList.filter(({ title }) => title.toLowerCase().indexOf(search.toLowerCase()) != -1),
     [nftList, search]
+  );
+  const rowCount = useMemo(
+    () => Math.ceil(filteredNftList.length / countNftItemInRow) + (search ? 0 : numberOfRowsToLoad),
+    [filteredNftList.length, countNftItemInRow, search]
   );
 
   useEffect(
@@ -68,7 +75,7 @@ export function NftList() {
                   <InfiniteLoader
                     isRowLoaded={isRowLoaded}
                     loadMoreRows={loadMoreRows}
-                    rowCount={Math.ceil(filteredNftList.length / countNftItemInRow) + (search ? 0 : 3)}
+                    rowCount={rowCount}
                   >
                     {({ onRowsRendered, registerChild }) => (
                       <List
@@ -78,7 +85,7 @@ export function NftList() {
                           nftListVirtualizedRef.current = list;
                           registerChild(list);
                         }}
-                        rowCount={Math.ceil(filteredNftList.length / countNftItemInRow) + (search ? 0 : 3)}
+                        rowCount={rowCount}
                         rowHeight={() => nftItemHeight}
                         rowRenderer={rowRenderer}
                         width={width}

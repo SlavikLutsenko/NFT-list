@@ -1,3 +1,5 @@
+@use '@/styles/colors.scss' as colors;
+
 $max-nft-list-width: 1500px;
 $max-nft-item-width: 250px;
 $max-column-count: 5;
@@ -42,7 +44,7 @@ $max-column-count: 5;
   width: 50%;
   max-width: 400px;
 
-  border-bottom: 1px solid #c4c4c4;
+  border-bottom: 1px solid colors.$cloud;
   padding: 5px 15px;
   text-align: center;
   font-size: 24px;

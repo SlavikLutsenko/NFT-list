@@ -1,8 +1,10 @@
+@use '@/styles/colors.scss' as colors;
+
 .nft-item {
-  border: 1px solid #c4c4c4;
+  border: 1px solid colors.$cloud;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 4px 0px #e4e4e4;
+  box-shadow: 0 0 4px 0px colors.$platinum;
   height: fit-content;
 
   .nft-image-wrapper {

@@ -2,7 +2,6 @@ import PropTypes from 'prop-types';
 import NextImage from 'next/image';
 import cn from 'classnames';
 
-// TODO: use embedded svg
 import spinnerIconUrl from 'public/spinner.svg';
 
 import styles from './styles.module.scss';
